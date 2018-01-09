@@ -1,52 +1,57 @@
 <template>
-  <div>
-    <table>
+    <div>
+    
+    <p v-html="getMarkdownTextByIdentifier('block1')"></p>
+    <img v-bind:src="getImageSourceByIdentifier('picture1')" alt="home page image" style="width: 60rem;">
+    <p v-html="getMarkdownTextByIdentifier('block2')"></p>
+    <p v-html="getMarkdownTextByIdentifier('block3')"></p>
 
-      <tbody>
-
-        <div v-for='item in newsList' class="card" style="width: 80rem;">
-          <img class="card-img-top" v-bind:src="item.fields.leadImage.fields.file.url" alt="Card image cap" style="width: 20rem;">
-          <div class="card-block">
-            <h4 class="card-title">{{item.fields.title}}</h4>
-            <p class="card-text">{{item.fields.introduction}}</p>
-            <a href="#" class="btn btn-primary">Go somewhere</a>
-          </div>
-        </div>
-      </tbody>
-    </table>
   </div>
 </template>
 
 <script>
-const _ = require('underscore')
+const _ = require("underscore")
 
-import { myContentService } from '@/mixins/ContentService.js'
+import { myContentService } from "@/mixins/ContentService.js";
 export default {
   mixins: [myContentService],
-  name: 'homepage',
+  name: "homepage",
   data() {
     return {
-      newsList: [1, 2, 3]
-    }
+      homepageContent: []
+    };
   },
   computed: {},
   mounted() {
-    this.getNewsList()
+    this.getHomepageContent();
   },
   methods: {
-    getNewsList() {
-      myContentService.fetchContentTypes().then((contentTypes) => {
-        var news = _.find(contentTypes, function(contentType) { return contentType.name == 'News' })
-        return myContentService.fetchEntriesForContentType(news)
-          .then((entries) => {
-            console.log(entries)
-            this.newsList = entries
-          })
-      })
-
+    getHomepageContent() {
+      this.getContentForContentTypeName("PageContent");
+    },
+    getContentForContentTypeName(contentTypeName) {
+      myContentService.fetchContentTypes().then(contentTypes => {
+        var pageContent = _.find(contentTypes, function(contentType) {
+          return contentType.name == contentTypeName;
+        });
+        return myContentService
+          .fetchEntriesForContentType(pageContent)
+          .then(entries => {
+            this.homepageContent = _.filter(entries, function(entry) {
+              return entry.fields.pageName == "home";
+            });
+          });
+      });
+    },
+    getMarkdownTextByIdentifier(contentId) {
+      return myContentService.getMarkdownTextByIdentifier(contentId, this.homepageContent)
+    },    
+    getImageSourceByIdentifier(contentId) {
+      return myContentService.getImageSourceByIdentifier(contentId, this.homepageContent)
     }
+
   }
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
